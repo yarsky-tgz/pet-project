@@ -17,5 +17,12 @@
         "@typescript-eslint"
     ],
     "rules": {
+        "newline-per-chained-call": 1,
+        "no-return-assign": 1,
+        "consistent-return": 1,
+        "no-console": 1,
+        "max-len": 1,
+        "import/extensions": 1,
+        "import/no-unresolved": 1
     }
 }

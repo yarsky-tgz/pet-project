@@ -1,5 +1,5 @@
 import { createConnection } from 'mysql2';
-import { Book, Author } from './Iparser';
+import { Book, Author, Genre } from './Iparser';
 
 const config = {
   host: 'localhost',
@@ -10,24 +10,35 @@ const config = {
 
 const connection = createConnection(config).promise();
 
+function addGenre(genre: Genre) {
+  connection.query('INSERT INTO genres (name) VALUES (?)', [genre.genre])
+    .catch((err) => console.log(err));
+}
+
 function addBooks(book: Book[]) {
-  console.log(book);
-  // const bookQueryString: string = `INSERT INTO books
-  //                                (author, title, size, rating, raters_count, genre_id, book_url)
-  //                                VALUES (?,?,?,?,?,?,?)`;
-  // connection.query(bookQueryString, [
-  //   book.author, book.title, book.size, book.rating, book.ratersCount, book.genre, book.url,
-  // ]).catch((err) => console.log(err));
+  const bookReplacements: (string | number | undefined)[] = [];
+  let queryPlaceholders: string = '(?,?,?,?,?,?,?)';
+  book.forEach((el, idx) => {
+    if (idx === 0) {
+      bookReplacements.push(el.author, el.title, el.size, el.rating, el.ratersCount, el.genre, el.url);
+    } else {
+      queryPlaceholders += ',(?,?,?,?,?,?,?)';
+      bookReplacements.push(el.author, el.title, el.size, el.rating, el.ratersCount, el.genre, el.url);
+    }
+  });
+  const bookQueryString: string = `INSERT INTO books
+                                 (author, title, size, rating, raters_count, genre_id, book_url)
+                                 VALUES ${queryPlaceholders}`;
+  connection.query(bookQueryString, bookReplacements)
+    .catch((err) => console.log(err));
 }
 
 function addAuthors(author: Author[]) {
-  console.log(author);
-  // const authorQueryString: string = `INSERT INTO authors
-  //                                    (name, email, date_of_birth, books_list_url)
-  //                                    VALUES (?,?,?,?)`;
-  // connection.query(authorQueryString, [
-  //   author.name, author.email, author.dateOfBirth, author.booksListUrl,
-  // ]).catch((err) => console.log(err));
+  const authorQueryString: string = `INSERT INTO authors
+                                     (name, email, date_of_birth, books_list_url)
+                                     VALUES (?,?,?,?)`;
+  connection.query(authorQueryString, [author[0].name, author[0].email, author[0].dateOfBirth, author[0].booksListUrl])
+    .catch((err) => console.log(err));
 }
 
-export { addBooks, addAuthors };
+export { addBooks, addAuthors, addGenre };

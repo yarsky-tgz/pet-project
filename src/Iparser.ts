@@ -1,7 +1,7 @@
 export interface Author {
   name: string;
-  dateOfBirth: string | undefined;
-  email: string;
+  dateOfBirth: Date | undefined;
+  email: string | undefined;
   booksListUrl: string;
 }
 
@@ -9,8 +9,12 @@ export interface Book {
   url: string;
   author: string;
   title: string;
-  size: number;
-  rating: number;
-  ratersCount: number;
-  genre: string;
+  size: number | undefined;
+  rating: number | undefined;
+  ratersCount: number | undefined;
+  genre: number | undefined;
+}
+
+export interface Genre {
+  genre: string | undefined
 }

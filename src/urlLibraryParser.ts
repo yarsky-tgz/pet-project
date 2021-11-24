@@ -70,7 +70,6 @@ import { Book, Author, Genre } from './Iparser';
                   }
                 }
                 authorArray.push(author);
-                addAuthors(authorArray);
                 const booksArray: Book[] = [];
                 let book: Book = {
                   url: '',
@@ -146,7 +145,10 @@ import { Book, Author, Genre } from './Iparser';
                     }
                   });
                 }
-                addBooks(booksArray);
+                if (booksArray.length) {
+                  addBooks(booksArray);
+                  addAuthors(authorArray);
+                }
               });
           }
         });

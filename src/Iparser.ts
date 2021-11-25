@@ -16,5 +16,10 @@ export interface Book {
 }
 
 export interface Genre {
-  genre: string | undefined
+  genre: string | undefined;
+}
+
+export interface AuthorLink {
+  name: string;
+  url: string;
 }

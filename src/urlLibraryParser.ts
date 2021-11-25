@@ -3,26 +3,29 @@ import fetch from 'node-fetch';
 import iconv from 'iconv-lite';
 import * as cheerio from 'cheerio';
 import { addAuthors, addBooks, addGenre } from './db-mysql.js';
-import { Book, Author, Genre } from './Iparser';
+import { Book, Author, Genre, AuthorLink } from './Iparser';
 
 (async () => {
   const fetchData = async (url: string) => {
-    let code: string = '';
-    if (url.indexOf('RUFANT') !== -1) code = 'koi8-r';
-    else code = 'CP1251';
+    let code: string;
+    if (url.indexOf('RUFANT') !== -1) {
+      code = 'koi8-r';
+    } else {
+      code = 'CP1251';
+    }
     const data = await fetch(url)
       .then((res) => {
-        if (res && res.body) return res.body.pipe(iconv.decodeStream(code));
+        if (res.body) return res.body.pipe(iconv.decodeStream(code));
       });
     return data;
   };
   const data = await fetchData(argv[2]);
 
-  if (data !== undefined) {
+  if (data) {
     let dataString: string = '';
     data.on('data', (chunk: string) => dataString += chunk)
       .on('end', () => {
-        const authorLinks: Object[] = [];
+        const authorLinks: AuthorLink[] = [];
         const genresArray: string[] = [];
         const $ = cheerio.load(dataString);
         $('li').children('a').each((idx, elem) => {
@@ -33,16 +36,16 @@ import { Book, Author, Genre } from './Iparser';
             }
             return `http://lib.ru/RUFANT/${url}`;
           })();
-          const authorLinksObject = {
+          const authorLinksObject: AuthorLink = {
             name: $(elem).text(),
             url: authorUrl,
           };
           authorLinks.push(authorLinksObject);
         });
         authorLinks.splice(0, 4);
-        authorLinks.forEach(async (e: any) => {
+        authorLinks.forEach(async (e) => {
           const authorLinksData = await fetchData(e.url);
-          if (authorLinksData !== undefined) {
+          if (authorLinksData) {
             let authorDataString: string = '';
             authorLinksData.on('data', (chunk: string) => authorDataString += chunk)
               .on('end', () => {
@@ -59,13 +62,13 @@ import { Book, Author, Genre } from './Iparser';
                 if ($ch('td').children('li').children('u').text()) {
                   author.email = $ch('td').children('li').children('u').text();
                 }
-                if ($ch('a[href=/rating/bday/]').parent().parent().text().split(' ')[1] !== undefined) {
+                if ($ch('a[href=/rating/bday/]').parent().parent().text().split(' ')[1]) {
                   const rawDate = $ch('a[href=/rating/bday/]').parent().parent().text().split(' ')[1].slice(0, 10).split('/');
-                  if (rawDate[2] !== undefined) {
+                  if (rawDate[2]) {
                     if (Number.isNaN(Number(rawDate[2][3]))) {
-                      author.dateOfBirth = new Date(1111, Number(rawDate[1]) - 1, Number(rawDate[0]) + 1);
+                      author.dateOfBirth = new Date(1111, +rawDate[1] - 1, +rawDate[0]);
                     } else {
-                      author.dateOfBirth = new Date(Number(rawDate[2]), Number(rawDate[1]) - 1, Number(rawDate[0]) + 1);
+                      author.dateOfBirth = new Date(+rawDate[2], +rawDate[1] - 1, +rawDate[0]);
                     }
                   }
                 }
@@ -82,7 +85,7 @@ import { Book, Author, Genre } from './Iparser';
                 };
                 if (e.url.indexOf('RUFANT') !== -1) {
                   $ch('body').children('li').each((index, element) => {
-                    if ($ch(element).children('tt').children('small').text().split('[')[1] !== undefined) {
+                    if ($ch(element).children('tt').children('small').text().split('[')[1]) {
                       book.url = e.url + $ch(element).children('a[href]').attr('href');
                       book.author = e.name;
                       book.title = $ch(element).children('a[href]').text();
@@ -114,8 +117,8 @@ import { Book, Author, Genre } from './Iparser';
                       const splitFullRating = fullRating.split('*');
                       book.ratersCount = +splitFullRating[1] || undefined;
                       book.rating = +splitFullRating[0] || undefined;
-                      $ch(element).children('small').each((i, e) => {
-                        const getGenre = $ch(e).text().split(' ');
+                      $ch(element).children('small').each((i, elem) => {
+                        const getGenre = $ch(elem).text().split(' ');
                         getGenre.forEach((el) => {
                           if (el !== 'Комментарии:' && el.indexOf('Оценка') === -1 && el.indexOf('(') === -1 && el.length >= 4) {
                             const newGenre: Genre = {
